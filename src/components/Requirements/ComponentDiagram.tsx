@@ -1,161 +1,385 @@
 import { useState } from 'react';
 import { 
   Boxes, 
-  Layers, 
-  Code, 
-  Database, 
+  Users, 
   Shield, 
+  Database, 
+  Key, 
   Brain, 
-  Bell, 
-  BarChart, 
-  Server, 
-  Globe,
-  ArrowRight,
-  Users,
+  Zap, 
+  Globe, 
+  Bell,
+  Server,
   Lock,
-  FileText,
-  Workflow
+  Settings,
+  BarChart,
+  Cloud,
+  Network
 } from 'lucide-react';
 
-export function ComponentDiagram() {
-  const [activeComponent, setActiveComponent] = useState<string | null>(null);
-
-  const components = {
-    ui: {
-      title: 'Portal UI Components',
-      icon: <Layers className="h-5 w-5 text-blue-600" />,
-      color: 'blue',
-      description: 'Frontend components that make up the user interface',
-      subcomponents: [
-        { name: 'Permission Selection', description: 'Interface for browsing and selecting Graph API permissions' },
-        { name: 'Approval Management', description: 'UI for reviewing and approving permission requests' },
-        { name: 'Dashboard & Analytics', description: 'Visualization of request metrics and status' },
-        { name: 'Notification Center', description: 'Interface for viewing and managing notifications' },
-        { name: 'AI Suggestion Interface', description: 'UI for displaying AI-powered permission suggestions' }
-      ],
-      dependencies: ['api', 'ai']
-    },
-    api: {
-      title: 'API Layer Components',
-      icon: <Code className="h-5 w-5 text-purple-600" />,
-      color: 'purple',
-      description: 'API endpoints and service interfaces',
-      subcomponents: [
-        { name: 'Permission API', description: 'Endpoints for permission management' },
-        { name: 'Approval API', description: 'Endpoints for approval workflow' },
-        { name: 'User API', description: 'Endpoints for user management' },
-        { name: 'Analytics API', description: 'Endpoints for metrics and reporting' },
-        { name: 'Notification API', description: 'Endpoints for notification management' }
-      ],
-      dependencies: ['business', 'external']
-    },
-    business: {
-      title: 'Business Logic Layer',
-      icon: <Workflow className="h-5 w-5 text-green-600" />,
-      color: 'green',
-      description: 'Core business logic and workflow processing',
-      subcomponents: [
-        { name: 'Approval Workflow Engine', description: 'Manages approval stages and transitions' },
-        { name: 'Permission Validation', description: 'Validates permission requests against policies' },
-        { name: 'Notification Service', description: 'Generates and manages notifications' },
-        { name: 'Analytics Engine', description: 'Processes and aggregates metrics data' },
-        { name: 'Audit Logging', description: 'Records system activities for compliance' }
-      ],
-      dependencies: ['data', 'ai']
-    },
-    data: {
-      title: 'Data Layer',
-      icon: <Database className="h-5 w-5 text-red-600" />,
-      color: 'red',
-      description: 'Data storage and management components',
-      subcomponents: [
-        { name: 'Permission Repository', description: 'Stores permission definitions and metadata' },
-        { name: 'Request Repository', description: 'Stores permission requests and approval status' },
-        { name: 'User Repository', description: 'Stores user profiles and preferences' },
-        { name: 'Audit Repository', description: 'Stores audit logs and compliance data' },
-        { name: 'Analytics Repository', description: 'Stores metrics and reporting data' }
-      ],
-      dependencies: []
-    },
-    external: {
-      title: 'External Service Integrations',
-      icon: <Globe className="h-5 w-5 text-yellow-600" />,
-      color: 'yellow',
-      description: 'Integrations with external services and APIs',
-      subcomponents: [
-        { name: 'Microsoft Graph API', description: 'Integration for implementing permissions' },
-        { name: 'Azure Entra ID', description: 'Authentication and user management' },
-        { name: 'Email Service', description: 'For sending notification emails' },
-        { name: 'Azure Monitor', description: 'For system monitoring and alerts' },
-        { name: 'Azure Key Vault', description: 'For secure credential management' }
-      ],
-      dependencies: []
-    },
-    ai: {
-      title: 'AI Components',
-      icon: <Brain className="h-5 w-5 text-indigo-600" />,
-      color: 'indigo',
-      description: 'AI-powered components for intelligent suggestions',
-      subcomponents: [
-        { name: 'Azure OpenAI Client', description: 'Integration with Azure OpenAI service' },
-        { name: 'Prompt Engineering', description: 'Crafts effective prompts for AI responses' },
-        { name: 'Response Processing', description: 'Processes and validates AI responses' },
-        { name: 'Suggestion Engine', description: 'Generates permission suggestions' },
-        { name: 'Code Generation', description: 'Generates implementation code examples' }
-      ],
-      dependencies: ['external']
-    }
+interface ComponentDetailProps {
+  title: string;
+  description: string;
+  integrations: string[];
+  dataFlow: string[];
+  configuration: {
+    env: string[];
+    security: string[];
+    monitoring: string[];
   };
+}
 
-  const renderDependencyLines = () => {
-    if (!activeComponent) return null;
-    
-    const deps = components[activeComponent as keyof typeof components].dependencies;
-    
-    return deps.map(dep => {
-      const fromPos = document.getElementById(`component-${activeComponent}`)?.getBoundingClientRect();
-      const toPos = document.getElementById(`component-${dep}`)?.getBoundingClientRect();
+function ComponentDetail({ title, description, integrations, dataFlow, configuration }: ComponentDetailProps) {
+  return (
+    <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+      <h4 className="text-lg font-medium text-gray-900 mb-3">{title}</h4>
+      <p className="text-gray-600 mb-4">{description}</p>
       
-      if (!fromPos || !toPos) return null;
-      
-      // Calculate relative positions
-      const containerPos = document.getElementById('component-diagram-container')?.getBoundingClientRect();
-      if (!containerPos) return null;
-      
-      const fromX = (fromPos.left + fromPos.right) / 2 - containerPos.left;
-      const fromY = fromPos.bottom - containerPos.top;
-      const toX = (toPos.left + toPos.right) / 2 - containerPos.left;
-      const toY = toPos.top - containerPos.top;
-      
-      return (
-        <svg
-          key={`${activeComponent}-${dep}`}
-          className="absolute top-0 left-0 w-full h-full pointer-events-none"
-          style={{ zIndex: 1 }}
-        >
-          <defs>
-            <marker
-              id="arrowhead"
-              markerWidth="10"
-              markerHeight="7"
-              refX="0"
-              refY="3.5"
-              orient="auto"
-            >
-              <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563" />
-            </marker>
-          </defs>
-          <path
-            d={`M${fromX},${fromY} C${fromX},${(fromY + toY) / 2} ${toX},${(fromY + toY) / 2} ${toX},${toY}`}
-            stroke="#4B5563"
-            strokeWidth="2"
-            fill="none"
-            strokeDasharray="4"
-            markerEnd="url(#arrowhead)"
-          />
-        </svg>
-      );
-    });
+      <div className="space-y-4">
+        <div>
+          <h5 className="text-sm font-medium text-gray-900 mb-2">Integrations</h5>
+          <ul className="list-disc pl-5 text-sm text-gray-600">
+            {integrations.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        </div>
+        
+        <div>
+          <h5 className="text-sm font-medium text-gray-900 mb-2">Data Flow</h5>
+          <ul className="list-disc pl-5 text-sm text-gray-600">
+            {dataFlow.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        </div>
+        
+        <div>
+          <h5 className="text-sm font-medium text-gray-900 mb-2">Configuration</h5>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <h6 className="text-xs font-medium text-gray-700 mb-1">Environment</h6>
+              <ul className="list-disc pl-5 text-xs text-gray-600">
+                {configuration.env.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h6 className="text-xs font-medium text-gray-700 mb-1">Security</h6>
+              <ul className="list-disc pl-5 text-xs text-gray-600">
+                {configuration.security.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h6 className="text-xs font-medium text-gray-700 mb-1">Monitoring</h6>
+              <ul className="list-disc pl-5 text-xs text-gray-600">
+                {configuration.monitoring.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ComponentDiagram() {
+  const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
+
+  const components: Record<string, ComponentDetailProps> = {
+    webapp: {
+      title: " WebApp Permission Tab",
+      description: "Frontend web application for managing Graph API permissions, built with React and TypeScript.",
+      integrations: [
+        "Integrates with Azure Entra ID for authentication",
+        "Communicates with Azure Functions backend",
+        "Connects to Azure OpenAI for intelligent suggestions",
+        "Interfaces with Azure Monitoring for telemetry"
+      ],
+      dataFlow: [
+        "User authentication flow through Azure Entra ID",
+        "Permission requests to Azure Functions",
+        "Real-time updates through WebSocket connections",
+        "Telemetry data to Azure Monitoring"
+      ],
+      configuration: {
+        env: [
+          "VITE_AZURE_OPENAI_ENDPOINT",
+          "VITE_AZURE_OPENAI_KEY",
+          "VITE_AUTH_CLIENT_ID",
+          "VITE_API_ENDPOINT"
+        ],
+        security: [
+          "Azure Entra ID authentication",
+          "CORS configuration",
+          "Content Security Policy",
+          "SSL/TLS encryption"
+        ],
+        monitoring: [
+          "Application Insights integration",
+          "User activity tracking",
+          "Performance metrics",
+          "Error logging"
+        ]
+      }
+    },
+    entraId: {
+      title: "Azure Entra ID Groups",
+      description: "Identity and access management service for authentication and authorization.",
+      integrations: [
+        "Integration with web application for authentication",
+        "Role-based access control for permissions",
+        "Group management for approvers",
+        "Single sign-on capabilities"
+      ],
+      dataFlow: [
+        "Authentication token issuance",
+        "Group membership validation",
+        "Role assignment verification",
+        "User claims processing"
+      ],
+      configuration: {
+        env: [
+          "Tenant ID configuration",
+          "Application registration",
+          "API permissions",
+          "Authentication settings"
+        ],
+        security: [
+          "Multi-factor authentication",
+          "Conditional access policies",
+          "Token lifetime policies",
+          "Security defaults"
+        ],
+        monitoring: [
+          "Sign-in activity logs",
+          "Audit logs",
+          "Security reports",
+          "Risk detections"
+        ]
+      }
+    },
+    keyvault: {
+      title: "Azure Key Vault",
+      description: "Secure storage for application secrets, keys, and certificates.",
+      integrations: [
+        "Secret management for applications",
+        "Certificate storage and management",
+        "Key rotation automation",
+        "Access policy management"
+      ],
+      dataFlow: [
+        "Secret retrieval requests",
+        "Certificate management",
+        "Key operations",
+        "Access policy validation"
+      ],
+      configuration: {
+        env: [
+          "Access policies",
+          "Network security",
+          "Key rotation settings",
+          "Backup configuration"
+        ],
+        security: [
+          "RBAC configuration",
+          "Network security groups",
+          "Private endpoints",
+          "Managed identities"
+        ],
+        monitoring: [
+          "Access logs",
+          "Operation logs",
+          "Security alerts",
+          "Metrics collection"
+        ]
+      }
+    },
+    openai: {
+      title: "Azure OpenAI",
+      description: "AI service for intelligent permission suggestions and analysis.",
+      integrations: [
+        "Integration with web application",
+        "API endpoint configuration",
+        "Model deployment management",
+        "Rate limiting implementation"
+      ],
+      dataFlow: [
+        "Permission analysis requests",
+        "AI model responses",
+        "Usage metrics",
+        "Error handling"
+      ],
+      configuration: {
+        env: [
+          "Model configurations",
+          "API endpoints",
+          "Rate limits",
+          "Response settings"
+        ],
+        security: [
+          "API key management",
+          "Network security",
+          "Request validation",
+          "Content filtering"
+        ],
+        monitoring: [
+          "Usage metrics",
+          "Performance monitoring",
+          "Error tracking",
+          "Cost analysis"
+        ]
+      }
+    },
+    functions: {
+      title: "Azure Functions",
+      description: "Serverless backend services for permission management and business logic.",
+      integrations: [
+        "Web application integration",
+        "Database operations",
+        "OpenAI service calls",
+        "Graph API interactions"
+      ],
+      dataFlow: [
+        "HTTP request handling",
+        "Permission processing",
+        "Approval workflow management",
+        "Notification triggers"
+      ],
+      configuration: {
+        env: [
+          "Connection strings",
+          "Function settings",
+          "Scale configuration",
+          "Runtime settings"
+        ],
+        security: [
+          "Authentication",
+          "Authorization",
+          "CORS policies",
+          "Network security"
+        ],
+        monitoring: [
+          "Function metrics",
+          "Performance monitoring",
+          "Error logging",
+          "Tracing"
+        ]
+      }
+    },
+    sqldb: {
+      title: "Azure SQL Database",
+      description: "Relational database for storing permission requests and approval workflows.",
+      integrations: [
+        "Azure Functions integration",
+        "Data persistence",
+        "Transaction management",
+        "Backup and recovery"
+      ],
+      dataFlow: [
+        "Permission request storage",
+        "Approval workflow data",
+        "Audit logging",
+        "Historical tracking"
+      ],
+      configuration: {
+        env: [
+          "Connection strings",
+          "Database settings",
+          "Scaling configuration",
+          "Backup settings"
+        ],
+        security: [
+          "Firewall rules",
+          "Authentication",
+          "Data encryption",
+          "Auditing"
+        ],
+        monitoring: [
+          "Performance metrics",
+          "Query monitoring",
+          "Resource usage",
+          "Alerts"
+        ]
+      }
+    },
+    graph: {
+      title: "MS Graph API",
+      description: "Microsoft Graph API for implementing and managing permissions.",
+      integrations: [
+        "Azure Functions integration",
+        "Permission implementation",
+        "User management",
+        "Application management"
+      ],
+      dataFlow: [
+        "Permission assignments",
+        "User data access",
+        "Application updates",
+        "Directory operations"
+      ],
+      configuration: {
+        env: [
+          "API endpoints",
+          "Authentication settings",
+          "Permission scopes",
+          "Version configuration"
+        ],
+        security: [
+          "OAuth 2.0 setup",
+          "Token validation",
+          "Scope verification",
+          "Rate limiting"
+        ],
+        monitoring: [
+          "API metrics",
+          "Usage tracking",
+          "Error monitoring",
+          "Performance analysis"
+        ]
+      }
+    },
+    monitoring: {
+      title: "Azure Monitoring",
+      description: "Comprehensive monitoring and alerting system for the entire application.",
+      integrations: [
+        "Application integration",
+        "Log analytics",
+        "Metric collection",
+        "Alert management"
+      ],
+      dataFlow: [
+        "Telemetry collection",
+        "Log aggregation",
+        "Metric processing",
+        "Alert generation"
+      ],
+      configuration: {
+        env: [
+          "Workspace settings",
+          "Collection rules",
+          "Retention policies",
+          "Alert configurations"
+        ],
+        security: [
+          "Access control",
+          "Data privacy",
+          "Encryption settings",
+          "Network security"
+        ],
+        monitoring: [
+          "System health",
+          "Resource metrics",
+          "Log analysis",
+          "Performance tracking"
+        ]
+      }
+    }
   };
 
   return (
@@ -163,198 +387,241 @@ export function ComponentDiagram() {
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
           <Boxes className="h-6 w-6 text-blue-600 mr-2" />
-          Component Diagram
+          System Component Architecture
         </h2>
         <p className="text-gray-600">
-          This diagram illustrates the structural view of the Graph Permissions system, showing the main components, their relationships, and dependencies.
+          Interactive component diagram showing the relationships and integrations between system services.
         </p>
       </div>
 
-      <div id="component-diagram-container" className="relative bg-white rounded-lg shadow-lg p-8 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Object.entries(components).map(([key, component]) => (
-            <div
-              id={`component-${key}`}
-              key={key}
-              className={`border-2 rounded-lg p-4 transition-all duration-300 ${
-                activeComponent === key
-                  ? `border-${component.color}-500 shadow-lg`
-                  : `border-gray-200 hover:border-${component.color}-300 hover:shadow-md`
-              }`}
-              onClick={() => setActiveComponent(activeComponent === key ? null : key)}
+      {/* Architecture Diagram */}
+      <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200 mb-8">
+        <div className="relative">
+          {/* User Actors */}
+          <div className="absolute left-4 top-4 space-y-4">
+          </div>
+
+          {/* Main Components Grid */}
+          <div className="grid grid-cols-3 gap-8 ml-32">
+            {/* Row 1 */}
+            <button 
+              onClick={() => setSelectedComponent('entraId')}
+              className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-colors"
             >
-              <div className="flex items-center mb-3">
-                <div className={`w-10 h-10 rounded-full bg-${component.color}-100 flex items-center justify-center mr-3`}>
-                  {component.icon}
-                </div>
-                <h3 className="text-lg font-medium text-gray-900">{component.title}</h3>
-              </div>
-              <p className="text-gray-600 mb-4">{component.description}</p>
-              
-              {activeComponent === key && (
-                <div className="mt-4 space-y-3">
-                  <h4 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Subcomponents</h4>
-                  <ul className="space-y-2">
-                    {component.subcomponents.map((sub, index) => (
-                      <li key={index} className="flex items-start">
-                        <div className={`w-2 h-2 rounded-full bg-${component.color}-500 mt-1.5 mr-2`}></div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{sub.name}</p>
-                          <p className="text-xs text-gray-500">{sub.description}</p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  {component.dependencies.length > 0 && (
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Dependencies</h4>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {component.dependencies.map(dep => (
-                          <span
-                            key={dep}
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${components[dep as keyof typeof components].color}-100 text-${components[dep as keyof typeof components].color}-800`}
-                          >
-                            {components[dep as keyof typeof components].title}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+              <Shield className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+              <div className="text-sm font-medium text-center">Azure Entra ID</div>
+            </button>
+            
+            <button 
+              onClick={() => setSelectedComponent('keyvault')}
+              className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-colors"
+            >
+              <Key className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+              <div className="text-sm font-medium text-center">Azure Key Vault</div>
+            </button>
+            
+            <button 
+              onClick={() => setSelectedComponent('sqldb')}
+              className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-colors"
+            >
+              <Database className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+              <div className="text-sm font-medium text-center">Azure SQL Database</div>
+            </button>
+
+            {/* Row 2 */}
+            <button 
+              onClick={() => setSelectedComponent('webapp')}
+              className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-colors"
+            >
+              <Globe className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+              <div className="text-sm font-medium text-center">Azure WebApp</div>
+            </button>
+            
+            <button 
+              onClick={() => setSelectedComponent('openai')}
+              className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-colors"
+            >
+              <Brain className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+              <div className="text-sm font-medium text-center">Azure OpenAI</div>
+            </button>
+            
+            <button 
+              onClick={() => setSelectedComponent('functions')}
+              className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-colors"
+            >
+              <Zap className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+              <div className="text-sm font-medium text-center">Azure Functions</div>
+            </button>
+
+            {/* Row 3 */}
+            <button 
+              onClick={() => setSelectedComponent('monitoring')}
+              className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-colors"
+            >
+              <BarChart className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+              <div className="text-sm font-medium text-center">Azure Monitoring</div>
+            </button>
+            
+            <button 
+              onClick={() => setSelectedComponent('graph')}
+              className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-colors"
+            >
+              <Network className="h-8 w-8 text-green-600 mx-auto mb-2" />
+              <div className="text-sm font-medium text-center">MS Graph API</div>
+            </button>
+            
+            <div className="flex items-center justify-center">
+              <Bell className="h-8 w-8 text-gray-400" />
+              <div className="text-sm font-medium ml-2">Notifications</div>
             </div>
-          ))}
+          </div>
+
+          {/* Connection Lines */}
+          <svg className="absolute inset-0 pointer-events-none" style={{ zIndex: -1 }}>
+            <defs>
+              <marker
+                id="arrowhead"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" />
+              </marker>
+            </defs>
+            {/* Add your connection lines here with marker-end="url(#arrowhead)" */}
+          </svg>
+        </div>
+      </div>
+
+      {/* Component Details */}
+      {selectedComponent && components[selectedComponent] && (
+        <div className="mt-8">
+          <ComponentDetail {...components[selectedComponent]} />
+        </div>
+      )}
+
+      {/* Deployment Specifications */}
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <Cloud className="h-5 w-5 text-blue-600 mr-2" />
+            Infrastructure Requirements
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Server Configuration</h4>
+              <ul className="list-disc pl-5 text-sm text-gray-600">
+                <li>App Service Plan: Premium V3</li>
+                <li>Minimum 2 instances for high availability</li>
+                <li>Auto-scaling enabled</li>
+                <li>Memory: 8GB per instance</li>
+                <li>vCPUs: 2 per instance</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Network Topology</h4>
+              <ul className="list-disc pl-5 text-sm text-gray-600">
+                <li>Virtual Network integration</li>
+                <li>Private endpoints for Azure services</li>
+                <li>Application Gateway for load balancing</li>
+                <li>Azure Front Door for global routing</li>
+              </ul>
+            </div>
+          </div>
         </div>
 
-        {/* Component Relationships Visualization */}
-        <div className="mt-12 bg-gray-50 rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-6">Component Relationships</h3>
-          
-          <div className="relative">
-            {/* UI Layer */}
-            <div className="flex justify-center mb-16">
-              <div className="w-64 p-4 bg-blue-100 rounded-lg border border-blue-300 text-center">
-                <Layers className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                <h4 className="font-medium text-blue-900">Portal UI Components</h4>
-              </div>
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <Lock className="h-5 w-5 text-blue-600 mr-2" />
+            Security & Scaling
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Security Measures</h4>
+              <ul className="list-disc pl-5 text-sm text-gray-600">
+                <li>Azure Entra ID authentication</li>
+                <li>Network Security Groups</li>
+                <li>Web Application Firewall</li>
+                <li>DDoS protection</li>
+                <li>SSL/TLS encryption</li>
+              </ul>
             </div>
-            
-            {/* API Layer */}
-            <div className="flex justify-center mb-16">
-              <div className="w-64 p-4 bg-purple-100 rounded-lg border border-purple-300 text-center">
-                <Code className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-                <h4 className="font-medium text-purple-900">API Layer Components</h4>
-              </div>
-            </div>
-            
-            {/* Business Logic Layer */}
-            <div className="flex justify-center mb-16">
-              <div className="w-64 p-4 bg-green-100 rounded-lg border border-green-300 text-center">
-                <Workflow className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                <h4 className="font-medium text-green-900">Business Logic Layer</h4>
-              </div>
-            </div>
-            
-            {/* Data & External Services Layer */}
-            <div className="flex justify-center gap-16">
-              <div className="w-64 p-4 bg-red-100 rounded-lg border border-red-300 text-center">
-                <Database className="h-6 w-6 text-red-600 mx-auto mb-2" />
-                <h4 className="font-medium text-red-900">Data Layer</h4>
-              </div>
-              
-              <div className="w-64 p-4 bg-yellow-100 rounded-lg border border-yellow-300 text-center">
-                <Globe className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
-                <h4 className="font-medium text-yellow-900">External Services</h4>
-              </div>
-            </div>
-            
-            {/* AI Components (to the side) */}
-            <div className="absolute right-0 top-1/3 transform -translate-y-1/2">
-              <div className="w-64 p-4 bg-indigo-100 rounded-lg border border-indigo-300 text-center">
-                <Brain className="h-6 w-6 text-indigo-600 mx-auto mb-2" />
-                <h4 className="font-medium text-indigo-900">AI Components</h4>
-              </div>
-            </div>
-            
-            {/* Arrows */}
-            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-              {/* UI to API */}
-              <svg className="absolute top-0 left-0 w-full h-full">
-                <defs>
-                  <marker id="arrowhead-1" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280" />
-                  </marker>
-                </defs>
-                <line x1="50%" y1="12%" x2="50%" y2="24%" stroke="#6B7280" strokeWidth="2" markerEnd="url(#arrowhead-1)" />
-              </svg>
-              
-              {/* API to Business */}
-              <svg className="absolute top-0 left-0 w-full h-full">
-                <defs>
-                  <marker id="arrowhead-2" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280" />
-                  </marker>
-                </defs>
-                <line x1="50%" y1="36%" x2="50%" y2="48%" stroke="#6B7280" strokeWidth="2" markerEnd="url(#arrowhead-2)" />
-              </svg>
-              
-              {/* Business to Data */}
-              <svg className="absolute top-0 left-0 w-full h-full">
-                <defs>
-                  <marker id="arrowhead-3" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280" />
-                  </marker>
-                </defs>
-                <line x1="40%" y1="60%" x2="40%" y2="72%" stroke="#6B7280" strokeWidth="2" markerEnd="url(#arrowhead-3)" />
-              </svg>
-              
-              {/* Business to External */}
-              <svg className="absolute top-0 left-0 w-full h-full">
-                <defs>
-                  <marker id="arrowhead-4" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280" />
-                  </marker>
-                </defs>
-                <line x1="60%" y1="60%" x2="60%" y2="72%" stroke="#6B7280" strokeWidth="2" markerEnd="url(#arrowhead-4)" />
-              </svg>
-              
-              {/* Business to AI */}
-              <svg className="absolute top-0 left-0 w-full h-full">
-                <defs>
-                  <marker id="arrowhead-5" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280" />
-                  </marker>
-                </defs>
-                <path d="M55%,54% C70%,54% 70%,33% 80%,33%" stroke="#6B7280" strokeWidth="2" fill="none" markerEnd="url(#arrowhead-5)" />
-              </svg>
-              
-              {/* AI to UI */}
-              <svg className="absolute top-0 left-0 w-full h-full">
-                <defs>
-                  <marker id="arrowhead-6" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="#6B7280" />
-                  </marker>
-                </defs>
-                <path d="M80%,28% C70%,28% 70%,8% 55%,8%" stroke="#6B7280" strokeWidth="2" fill="none" markerEnd="url(#arrowhead-6)" />
-              </svg>
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Scaling Configuration</h4>
+              <ul className="list-disc pl-5 text-sm text-gray-600">
+                <li>Horizontal scaling: 2-10 instances</li>
+                <li>CPU threshold: 70%</li>
+                <li>Memory threshold: 80%</li>
+                <li>Scale-out time: 5 minutes</li>
+                <li>Scale-in time: 10 minutes</li>
+              </ul>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Component Legend</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {Object.entries(components).map(([key, component]) => (
-            <div key={key} className="flex items-center">
-              <div className={`w-8 h-8 rounded-full bg-${component.color}-100 flex items-center justify-center mr-3`}>
-                {component.icon}
+      {/* Configuration Details */}
+      <div className="mt-8">
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <Settings className="h-5 w-5 text-blue-600 mr-2" />
+            Configuration Management
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Environment Settings</h4>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <pre className="text-xs text-gray-600 whitespace-pre-wrap">
+{`# Azure Configuration
+AZURE_LOCATION=eastus
+AZURE_SUBSCRIPTION=prod
+
+# App Settings
+NODE_ENV=production
+WEBSITE_NODE_DEFAULT_VERSION=~18
+WEBSITE_RUN_FROM_PACKAGE=1
+
+# Scaling
+WEBSITE_HEALTHCHECK_MAXPINGFAILURES=2
+WEBSITES_ENABLE_APP_SERVICE_STORAGE=true`}
+                </pre>
               </div>
-              <span className="text-sm text-gray-700">{component.title}</span>
             </div>
-          ))}
+            
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Service Discovery</h4>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <pre className="text-xs text-gray-600 whitespace-pre-wrap">
+{`# Endpoints
+VITE_API_ENDPOINT=https://api.example.com
+VITE_AUTH_ENDPOINT=https://login.microsoftonline.com
+VITE_GRAPH_ENDPOINT=https://graph.microsoft.com
+
+# Service Discovery
+AZURE_SERVICE_DISCOVERY_MODE=dns
+SERVICE_DISCOVERY_INTERVAL=300`}
+                </pre>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Monitoring Setup</h4>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <pre className="text-xs text-gray-600 whitespace-pre-wrap">
+{`# Application Insights
+APPINSIGHTS_INSTRUMENTATIONKEY=your-key
+APPLICATIONINSIGHTS_CONNECTION_STRING=your-connection-string
+
+# Logging
+LOG_LEVEL=info
+WEBSITE_HTTPLOGGING_RETENTION_DAYS=7
+DIAGNOSTICS_AZUREBLOBRETENTIONDAYS=30`}
+                </pre>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
